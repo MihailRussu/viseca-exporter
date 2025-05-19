@@ -1,6 +1,6 @@
 # viseca-exporter
 
-Little helper to get transactions from Viseca One and print them in CSV format.
+Little helper to get transactions from Viseca One and print them in CSV or JSON format.
 
 ## Usage
 
@@ -18,6 +18,9 @@ This method processes the auth flow in the CLI and will trigger a 2FA request li
     export VISECA_CLI_USERNAME=<email>
     export VISECA_CLI_PASSWORD=<password>
     go run cmd/viseca-cli/main.go transactions <cardID>
+
+    # Or for JSON output
+    go run cmd/viseca-cli/main.go transactions --output-format json <cardID>
     ```
 
 ### Auth w/ browser
@@ -30,13 +33,17 @@ This method requires a valid session cookie obtained from an authenticated brows
 1. Filter the URLs in the network tab of the developer tools for `transactions`
 1. Save the card ID from the path (between `/v1/card/` and `/transactions`) to an env file (see examples)
 1. Save the session cookie (`AL_SESS-S=AAAAAA...`) to an env file (see examples)
+1. Choose your preferred output format (CSV or JSON)
 
 1.  ```
     source .env
     go run main.go "$VISECA_CARD" "$VISECA_SESS" > data/export.csv
+
+    # Or for JSON output
+    go run main.go "$VISECA_CARD" "$VISECA_SESS" json > data/export.json
     ```
 
-## Example .env 
+## Example .env
 
 ```
 VISECA_SESS=AL_SESS-S=xxxxxxxxxxxxxxxyyyyyy
@@ -45,9 +52,34 @@ VISECA_CARD=443592xxxxxxxxxx
 
 ## Example Output
 
+### CSV (default)
+
 ```csv
-"TransactionID","Date","Merchant","Amount","PFMCategoryID","PFMCategoryName"
-"AUTH8c919db2-1c23-43f1-8862-61c31336d9b6","2021-10-20T17:05:44","ALDI","50.550000","cv_groceries","Groceries"
+"TransactionID","Date","Merchant","Amount","Currency","OriginalAmount","OriginalCurrency","PFMCategoryID","PFMCategoryName"
+"AUTH8c919db2-1c23-43f1-8862-61c31336d9b6","2021-10-20T17:05:44","ALDI","50.55","CHF","50.55","CHF","cv_groceries","Groceries"
+```
+
+### JSON
+
+```json
+[
+  {
+    "transactionId": "AUTH8c919db2-1c23-43f1-8862-61c31336d9b6",
+    "cardId": "0000000AAAAA0000",
+    "maskedCardNumber": "XXXXXXXXXXXX0000",
+    "date": "2021-10-20T17:05:44",
+    "amount": 50.55,
+    "currency": "CHF",
+    "originalAmount": 50.55,
+    "originalCurrency": "CHF",
+    "merchantName": "Aldi Suisse 00",
+    "prettyName": "ALDI",
+    "pfmCategory": {
+      "id": "cv_groceries",
+      "name": "Groceries"
+    }
+  }
+]
 ```
 
 ## API

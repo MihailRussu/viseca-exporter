@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/anothertobi/viseca-exporter/internal/csv"
+	"github.com/anothertobi/viseca-exporter/internal/json"
 	"github.com/anothertobi/viseca-exporter/pkg/viseca"
 	"github.com/urfave/cli/v2"
 )
 
 const flagDateFrom = "date-from"
 const flagDateTo = "date-to"
+const flagOutputFormat = "output-format"
 
 // NewTransactionsCommand creates a new transactions CLI command
 func NewTransactionsCommand() *cli.Command {
@@ -32,6 +34,12 @@ func NewTransactionsCommand() *cli.Command {
 				Usage:    "to which date transactions should be fetched (format: 2006-01-02)",
 				Layout:   "2006-01-02",
 				Timezone: time.Local,
+			},
+			&cli.StringFlag{
+				Name:    flagOutputFormat,
+				Usage:   "output format (csv or json)",
+				Value:   "csv",
+				Aliases: []string{"o"},
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
@@ -70,7 +78,15 @@ func transactions(cCtx *cli.Context) error {
 		return err
 	}
 
-	out := csv.TransactionsString(transactions)
+	outputFormat := cCtx.String(flagOutputFormat)
+	var out string
+	
+	if outputFormat == "json" {
+		out = json.TransactionsString(transactions)
+	} else {
+		out = csv.TransactionsString(transactions)
+	}
+	
 	fmt.Print(out)
 
 	return nil
