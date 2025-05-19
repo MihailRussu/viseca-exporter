@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/anothertobi/viseca-exporter/internal/csv"
+	"github.com/anothertobi/viseca-exporter/internal/json"
 	"github.com/anothertobi/viseca-exporter/pkg/viseca"
 )
 
@@ -17,6 +18,7 @@ const sessionCookieName = "AL_SESS-S"
 
 // arg0: cardID
 // arg1: sessionCookie (e.g. `AL_SESS-S=...`)
+// arg2: [optional] output format (json or csv, defaults to csv)
 func main() {
 	if len(os.Args) < 3 {
 		log.Fatal("card ID and session cookie args required")
@@ -32,7 +34,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("error listing all transactions: %v", err)
 	}
-	fmt.Println(csv.TransactionsString(transactions))
+	
+	// Determine output format
+	outputFormat := "csv" // Default format
+	if len(os.Args) >= 4 {
+		if os.Args[3] == "json" {
+			outputFormat = "json"
+		}
+	}
+	
+	// Output in the selected format
+	if outputFormat == "json" {
+		fmt.Println(json.TransactionsString(transactions))
+	} else {
+		fmt.Println(csv.TransactionsString(transactions))
+	}
 }
 
 func initClient(sessionCookie string) (*viseca.Client, error) {
